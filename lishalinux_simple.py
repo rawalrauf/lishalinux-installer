@@ -74,45 +74,6 @@ def create_config(user_data):
             "removable": True
         },
         "debug": False,
-        "disk_config": {
-            "config_type": "default_layout",
-            "device_modifications": [
-                {
-                    "device": user_data['disk'],
-                    "partitions": [
-                        {
-                            "btrfs": [],
-                            "flags": ["boot"],
-                            "fs_type": "fat32",
-                            "size": "512MiB",
-                            "mount_options": [],
-                            "mountpoint": "/boot",
-                            "start": "1MiB",
-                            "status": "create",
-                            "type": "primary"
-                        },
-                        {
-                            "btrfs": [
-                                {"name": "@", "mountpoint": "/"},
-                                {"name": "@home", "mountpoint": "/home"},
-                                {"name": "@var", "mountpoint": "/var"},
-                                {"name": "@tmp", "mountpoint": "/tmp"},
-                                {"name": "@.snapshots", "mountpoint": "/.snapshots"}
-                            ],
-                            "flags": [],
-                            "fs_type": "btrfs",
-                            "size": "100%",
-                            "mount_options": ["compress=zstd"],
-                            "mountpoint": "/",
-                            "start": "513MiB",
-                            "status": "create",
-                            "type": "primary"
-                        }
-                    ],
-                    "wipe": True
-                }
-            ]
-        },
         "hostname": user_data['hostname'],
         "kernels": ["linux"],
         "locale_config": {
@@ -230,8 +191,7 @@ def main():
         cmd = [
             'archinstall',
             '--config', str(config_file),
-            '--creds', str(creds_file),
-            '--silent'
+            '--creds', str(creds_file)
         ]
         subprocess.run(cmd, check=True)
         
