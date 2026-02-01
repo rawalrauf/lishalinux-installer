@@ -64,81 +64,170 @@ def get_user_input():
 def create_config(user_data):
     """Create archinstall configuration"""
     return {
+        "app_config": {
+            "audio_config": {
+                "audio": "pipewire"
+            },
+            "bluetooth_config": {
+                "enabled": True
+            }
+        },
         "archinstall-language": "English",
-        "audio_config": {
-            "audio": "pipewire"
-        },
-        "bluetooth_config": {
-            "enabled": True
-        },
+        "auth_config": {},
         "bootloader_config": {
             "bootloader": "Limine",
-            "uki": False,
-            "removable": True
+            "removable": True,
+            "uki": False
         },
-        "debug": False,
+        "custom_commands": [],
         "disk_config": {
-            "config_type": "default_layout",
-            "device_modifications": [
-                {
-                    "device": user_data['disk'],
-                    "wipe": True,
-                    "partitions": [
-                        {
-                            "fs_type": "btrfs",
-                            "mountpoint": "/",
-                            "btrfs": [
-                                {"name": "@", "mountpoint": "/"},
-                                {"name": "@home", "mountpoint": "/home"},
-                                {"name": "@var", "mountpoint": "/var"},
-                                {"name": "@tmp", "mountpoint": "/tmp"},
-                                {"name": "@.snapshots", "mountpoint": "/.snapshots"}
-                            ],
-                            "mount_options": ["compress=zstd"]
-                        }
-                    ]
-                }
-            ],
             "btrfs_options": {
                 "snapshot_config": {
                     "type": "Snapper"
                 }
-            }
+            },
+            "config_type": "default_layout",
+            "device_modifications": [
+                {
+                    "device": user_data['disk'],
+                    "partitions": [
+                        {
+                            "btrfs": [],
+                            "dev_path": None,
+                            "flags": [
+                                "boot",
+                                "esp"
+                            ],
+                            "fs_type": "fat32",
+                            "mount_options": [],
+                            "mountpoint": "/boot",
+                            "obj_id": "boot-partition-id",
+                            "size": {
+                                "sector_size": {
+                                    "unit": "B",
+                                    "value": 512
+                                },
+                                "unit": "GiB",
+                                "value": 1
+                            },
+                            "start": {
+                                "sector_size": {
+                                    "unit": "B",
+                                    "value": 512
+                                },
+                                "unit": "MiB",
+                                "value": 1
+                            },
+                            "status": "create",
+                            "type": "primary"
+                        },
+                        {
+                            "btrfs": [
+                                {
+                                    "mountpoint": "/",
+                                    "name": "@"
+                                },
+                                {
+                                    "mountpoint": "/home",
+                                    "name": "@home"
+                                },
+                                {
+                                    "mountpoint": "/var/log",
+                                    "name": "@log"
+                                },
+                                {
+                                    "mountpoint": "/var/cache/pacman/pkg",
+                                    "name": "@pkg"
+                                }
+                            ],
+                            "dev_path": None,
+                            "flags": [],
+                            "fs_type": "btrfs",
+                            "mount_options": [
+                                "compress=zstd"
+                            ],
+                            "mountpoint": None,
+                            "obj_id": "root-partition-id",
+                            "size": {
+                                "sector_size": {
+                                    "unit": "B",
+                                    "value": 512
+                                },
+                                "unit": "B",
+                                "value": 20398997504
+                            },
+                            "start": {
+                                "sector_size": {
+                                    "unit": "B",
+                                    "value": 512
+                                },
+                                "unit": "B",
+                                "value": 1074790400
+                            },
+                            "status": "create",
+                            "type": "primary"
+                        }
+                    ],
+                    "wipe": True
+                }
+            ]
         },
         "hostname": user_data['hostname'],
-        "kernels": ["linux"],
+        "kernels": [
+            "linux"
+        ],
         "locale_config": {
             "kb_layout": "us",
             "sys_enc": "UTF-8",
-            "sys_lang": "en_US"
+            "sys_lang": "en_US.UTF-8"
         },
         "mirror_config": {
+            "custom_repositories": [],
+            "custom_servers": [],
             "mirror_regions": {
-                "Worldwide": [],
-                "United States": []
-            }
+                "Worldwide": [
+                    "http://mirror.rackspace.com/archlinux/$repo/os/$arch",
+                    "https://mirror.rackspace.com/archlinux/$repo/os/$arch",
+                    "https://ftpmirror.infania.net/mirror/archlinux/$repo/os/$arch",
+                    "https://geo.mirror.pkgbuild.com/$repo/os/$arch",
+                    "https://fastly.mirror.pkgbuild.com/$repo/os/$arch"
+                ]
+            },
+            "optional_repositories": []
         },
         "network_config": {
             "type": "iso"
         },
         "ntp": True,
-        "offline": False,
-        "packages": ["base-devel", "git", "fzf"],
+        "packages": [
+            "git",
+            "base-devel",
+            "fzf"
+        ],
+        "parallel_downloads": 0,
         "profile_config": {
             "gfx_driver": "All open-source",
             "greeter": "sddm",
             "profile": {
-                "details": ["Hyprland"],
+                "custom_settings": {
+                    "Hyprland": {
+                        "seat_access": "polkit"
+                    }
+                },
+                "details": [
+                    "Hyprland"
+                ],
                 "main": "Desktop"
             }
         },
-        "script": "guided",
-        "silent": False,
+        "script": None,
+        "services": [],
         "swap": {
+            "algorithm": "zstd",
             "enabled": True
         },
         "timezone": user_data['timezone'],
-        "version": "2.8.6"
+        "version": "3.0.15"
     }
 
 def create_creds(user_data):
