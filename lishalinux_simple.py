@@ -75,7 +75,8 @@ def create_config(user_data):
     # Calculate disk sizes
     total_disk_size = get_disk_size(user_data['disk'])
     boot_size_bytes = 1 * 1024**3  # 1 GiB in bytes
-    root_size_bytes = total_disk_size - boot_size_bytes - (1 * 1024**2)  # Leave 1MB at start
+    gpt_overhead = 34 * 512  # GPT header + backup (34 sectors * 512 bytes)
+    root_size_bytes = total_disk_size - boot_size_bytes - (1 * 1024**2) - (2 * gpt_overhead)  # Leave space for GPT
     boot_start_bytes = 1 * 1024**2  # 1 MiB
     root_start_bytes = boot_start_bytes + boot_size_bytes
     
