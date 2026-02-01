@@ -68,6 +68,9 @@ def create_config(user_data):
         "audio_config": {
             "audio": "pipewire"
         },
+        "bluetooth_config": {
+            "enabled": True
+        },
         "bootloader_config": {
             "bootloader": "Limine",
             "uki": False,
@@ -95,7 +98,7 @@ def create_config(user_data):
         },
         "ntp": True,
         "offline": False,
-        "packages": ["base-devel", "git", "fzf", "snapper", "hyprland", "sddm", "pipewire", "pipewire-pulse", "wireplumber", "bluez", "bluez-utils"],
+        "packages": ["base-devel", "git", "fzf"],
         "profile_config": {
             "gfx_driver": "All open-source",
             "greeter": "sddm",
