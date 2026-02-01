@@ -74,6 +74,9 @@ def create_config(user_data):
             "removable": True
         },
         "debug": False,
+        "disk_config": {
+            "config_type": "default_layout"
+        },
         "hostname": user_data['hostname'],
         "kernels": ["linux"],
         "locale_config": {
