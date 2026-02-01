@@ -82,14 +82,10 @@ def create_config(user_data):
                     "partitions": [
                         {
                             "btrfs": [],
-                            "dev_path": None,
                             "flags": ["boot"],
                             "fs_type": "fat32",
                             "size": {
-                                "sector_size": {
-                                    "unit": "B",
-                                    "value": 512
-                                },
+                                "sector_size": None,
                                 "unit": "MiB",
                                 "value": 512
                             },
@@ -97,10 +93,7 @@ def create_config(user_data):
                             "mountpoint": "/boot",
                             "obj_id": "boot-partition",
                             "start": {
-                                "sector_size": {
-                                    "unit": "B", 
-                                    "value": 512
-                                },
+                                "sector_size": None,
                                 "unit": "MiB",
                                 "value": 1
                             },
@@ -115,14 +108,10 @@ def create_config(user_data):
                                 {"name": "@tmp", "mountpoint": "/tmp"},
                                 {"name": "@.snapshots", "mountpoint": "/.snapshots"}
                             ],
-                            "dev_path": None,
                             "flags": [],
                             "fs_type": "btrfs",
                             "size": {
-                                "sector_size": {
-                                    "unit": "B",
-                                    "value": 512
-                                },
+                                "sector_size": None,
                                 "unit": "Percent",
                                 "value": 100
                             },
@@ -130,10 +119,7 @@ def create_config(user_data):
                             "mountpoint": "/",
                             "obj_id": "root-partition",
                             "start": {
-                                "sector_size": {
-                                    "unit": "B",
-                                    "value": 512
-                                },
+                                "sector_size": None,
                                 "unit": "MiB",
                                 "value": 513
                             },
