@@ -78,7 +78,18 @@ def create_config(user_data):
         },
         "debug": False,
         "disk_config": {
-            "config_type": "default_layout"
+            "config_type": "default_layout",
+            "device_modifications": [
+                {
+                    "device": user_data['disk'],
+                    "wipe": True
+                }
+            ],
+            "btrfs_options": {
+                "snapshot_config": {
+                    "type": "Snapper"
+                }
+            }
         },
         "hostname": user_data['hostname'],
         "kernels": ["linux"],
