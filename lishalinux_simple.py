@@ -71,10 +71,10 @@ def create_config(user_data):
                             "btrfs": [],
                             "flags": ["boot"],
                             "fs_type": "fat32",
-                            "size": {"unit": "MiB", "value": 512},
+                            "size": {"unit": "MiB", "value": 512, "sector_size": None},
                             "mount_options": [],
                             "mountpoint": "/boot",
-                            "start": {"unit": "MiB", "value": 1},
+                            "start": {"unit": "MiB", "value": 1, "sector_size": None},
                             "status": "create",
                             "type": "primary"
                         },
@@ -88,10 +88,10 @@ def create_config(user_data):
                             ],
                             "flags": [],
                             "fs_type": "btrfs",
-                            "size": {"unit": "Percent", "value": 100},
+                            "size": {"unit": "Percent", "value": 100, "sector_size": None},
                             "mount_options": ["compress=zstd"],
                             "mountpoint": "/",
-                            "start": {"unit": "MiB", "value": 513},
+                            "start": {"unit": "MiB", "value": 513, "sector_size": None},
                             "status": "create",
                             "type": "primary"
                         }
