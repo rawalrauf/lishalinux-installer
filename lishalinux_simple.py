@@ -59,27 +59,8 @@ def get_user_input():
         'sudo_access': True
     }
 
-def get_disk_size(disk_path):
-    """Get disk size in bytes"""
-    try:
-        result = subprocess.run(['lsblk', '-b', '-d', '-n', '-o', 'SIZE', disk_path], 
-                              capture_output=True, text=True)
-        return int(result.stdout.strip())
-    except:
-        # Fallback: assume reasonable size and let archinstall handle it
-        return 21474836480  # 20GB in bytes
-
 def create_config(user_data):
     """Create archinstall configuration"""
-    
-    # Calculate disk sizes
-    total_disk_size = get_disk_size(user_data['disk'])
-    boot_size_bytes = 1 * 1024**3  # 1 GiB in bytes
-    gpt_overhead = 34 * 512  # GPT header + backup (34 sectors * 512 bytes)
-    root_size_bytes = total_disk_size - boot_size_bytes - (1 * 1024**2) - (2 * gpt_overhead)  # Leave space for GPT
-    boot_start_bytes = 1 * 1024**2  # 1 MiB
-    root_start_bytes = boot_start_bytes + boot_size_bytes
-    
     return {
         "app_config": {
             "audio_config": {
@@ -171,7 +152,7 @@ def create_config(user_data):
                                     "value": 512
                                 },
                                 "unit": "B",
-                                "value": root_size_bytes
+                                "value": 20398997504
                             },
                             "start": {
                                 "sector_size": {
@@ -179,7 +160,7 @@ def create_config(user_data):
                                     "value": 512
                                 },
                                 "unit": "B",
-                                "value": root_start_bytes
+                                "value": 1074790400
                             },
                             "status": "create",
                             "type": "primary"
