@@ -30,11 +30,24 @@ def get_user_input():
         disk = f"/dev/{disk}"
     
     hostname = input("Hostname [lishalinux]: ").strip() or "lishalinux"
+    
+    # Root password right after hostname
+    root_password = getpass.getpass("Root password: ")
+    root_confirm = getpass.getpass("Confirm root password: ")
+    while root_password != root_confirm:
+        print("Passwords don't match!")
+        root_password = getpass.getpass("Root password: ")
+        root_confirm = getpass.getpass("Confirm root password: ")
+    
     timezone = input("Timezone [UTC]: ").strip() or "UTC"
     
     username = input("Username: ").strip()
     user_password = getpass.getpass(f"Password for {username}: ")
-    root_password = getpass.getpass("Root password: ")
+    user_confirm = getpass.getpass(f"Confirm password for {username}: ")
+    while user_password != user_confirm:
+        print("Passwords don't match!")
+        user_password = getpass.getpass(f"Password for {username}: ")
+        user_confirm = getpass.getpass(f"Confirm password for {username}: ")
     
     sudo_access = input(f"Give {username} sudo access? [Y/n]: ").strip().lower() != 'n'
     
@@ -71,10 +84,25 @@ def create_config(user_data):
                             "btrfs": [],
                             "flags": ["boot"],
                             "fs_type": "fat32",
-                            "size": {"unit": "MiB", "value": 512, "sector_size": None},
+                            "size": {
+                                "sector_size": {
+                                    "unit": "B",
+                                    "value": 512
+                                },
+                                "unit": "MiB",
+                                "value": 512
+                            },
                             "mount_options": [],
                             "mountpoint": "/boot",
-                            "start": {"unit": "MiB", "value": 1, "sector_size": None},
+                            "obj_id": "boot-partition",
+                            "start": {
+                                "sector_size": {
+                                    "unit": "B", 
+                                    "value": 512
+                                },
+                                "unit": "MiB",
+                                "value": 1
+                            },
                             "status": "create",
                             "type": "primary"
                         },
@@ -88,10 +116,25 @@ def create_config(user_data):
                             ],
                             "flags": [],
                             "fs_type": "btrfs",
-                            "size": {"unit": "Percent", "value": 100, "sector_size": None},
+                            "size": {
+                                "sector_size": {
+                                    "unit": "B",
+                                    "value": 512
+                                },
+                                "unit": "Percent",
+                                "value": 100
+                            },
                             "mount_options": ["compress=zstd"],
                             "mountpoint": "/",
-                            "start": {"unit": "MiB", "value": 513, "sector_size": None},
+                            "obj_id": "root-partition",
+                            "start": {
+                                "sector_size": {
+                                    "unit": "B",
+                                    "value": 512
+                                },
+                                "unit": "MiB",
+                                "value": 513
+                            },
                             "status": "create",
                             "type": "primary"
                         }
