@@ -82,6 +82,7 @@ def create_config(user_data):
                     "partitions": [
                         {
                             "btrfs": [],
+                            "dev_path": None,
                             "flags": ["boot"],
                             "fs_type": "fat32",
                             "size": {
@@ -114,6 +115,7 @@ def create_config(user_data):
                                 {"name": "@tmp", "mountpoint": "/tmp"},
                                 {"name": "@.snapshots", "mountpoint": "/.snapshots"}
                             ],
+                            "dev_path": None,
                             "flags": [],
                             "fs_type": "btrfs",
                             "size": {
