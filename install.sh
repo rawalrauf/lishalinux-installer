@@ -31,5 +31,5 @@ if [ ! -f "lishalinux_simple.py" ]; then
     chmod +x lishalinux_simple.py
 fi
 
-# Run the Python installer
-python3 lishalinux_simple.py
+# Run the Python installer with proper stdin
+python3 lishalinux_simple.py < /dev/tty
