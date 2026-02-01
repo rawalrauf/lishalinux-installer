@@ -41,6 +41,9 @@ def get_user_input():
     
     timezone = input("Timezone [UTC]: ").strip() or "UTC"
     
+    # Direct install option
+    direct_install = input("Start installation immediately? [y/N]: ").strip().lower() == 'y'
+    
     username = input("Username: ").strip()
     user_password = getpass.getpass(f"Password for {username}: ")
     user_confirm = getpass.getpass(f"Confirm password for {username}: ")
@@ -56,7 +59,8 @@ def get_user_input():
         'username': username,
         'user_password': user_password,
         'root_password': root_password,
-        'sudo_access': True
+        'sudo_access': True,
+        'direct_install': direct_install
     }
 
 def create_config(user_data):
@@ -247,19 +251,6 @@ def create_post_install():
 set -e
 echo "=== LishaLinux Post-Installation ==="
 
-# Enable services
-systemctl enable sddm
-systemctl enable bluetooth
-systemctl enable NetworkManager
-systemctl enable systemd-timesyncd
-
-# Setup Snapper
-if findmnt -n -o FSTYPE / | grep -q btrfs; then
-    snapper -c root create-config /
-    systemctl enable snapper-timeline.timer
-    systemctl enable snapper-cleanup.timer
-fi
-
 # Install LishaLinux configs
 cd /tmp
 git clone https://github.com/rawalrauf/lishalinux
@@ -311,6 +302,11 @@ def main():
             '--config', str(config_file),
             '--creds', str(creds_file)
         ]
+        
+        # Add --silent flag for direct install
+        if user_data['direct_install']:
+            cmd.append('--silent')
+            
         subprocess.run(cmd, check=True)
         
         print("\n=== Installation complete! ===")
