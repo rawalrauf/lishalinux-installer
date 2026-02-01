@@ -49,8 +49,6 @@ def get_user_input():
         user_password = getpass.getpass(f"Password for {username}: ")
         user_confirm = getpass.getpass(f"Confirm password for {username}: ")
     
-    sudo_access = input(f"Give {username} sudo access? [Y/n]: ").strip().lower() != 'n'
-    
     return {
         'disk': disk,
         'hostname': hostname,
@@ -58,7 +56,7 @@ def get_user_input():
         'username': username,
         'user_password': user_password,
         'root_password': root_password,
-        'sudo_access': sudo_access
+        'sudo_access': True
     }
 
 def create_config(user_data):
@@ -153,16 +151,16 @@ def create_config(user_data):
                                     "unit": "B",
                                     "value": 512
                                 },
-                                "unit": "B",
-                                "value": 20398997504
+                                "unit": "Percent",
+                                "value": 100
                             },
                             "start": {
                                 "sector_size": {
                                     "unit": "B",
                                     "value": 512
                                 },
-                                "unit": "B",
-                                "value": 1074790400
+                                "unit": "GiB",
+                                "value": 1
                             },
                             "status": "create",
                             "type": "primary"
