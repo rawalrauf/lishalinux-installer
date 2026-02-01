@@ -88,7 +88,7 @@ def create_config(user_data):
             }
         },
         "network_config": {
-            "type": "copy_iso"
+            "type": "iso"
         },
         "ntp": True,
         "offline": False,
