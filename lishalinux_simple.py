@@ -82,7 +82,21 @@ def create_config(user_data):
             "device_modifications": [
                 {
                     "device": user_data['disk'],
-                    "wipe": True
+                    "wipe": True,
+                    "partitions": [
+                        {
+                            "fs_type": "btrfs",
+                            "mountpoint": "/",
+                            "btrfs": [
+                                {"name": "@", "mountpoint": "/"},
+                                {"name": "@home", "mountpoint": "/home"},
+                                {"name": "@var", "mountpoint": "/var"},
+                                {"name": "@tmp", "mountpoint": "/tmp"},
+                                {"name": "@.snapshots", "mountpoint": "/.snapshots"}
+                            ],
+                            "mount_options": ["compress=zstd"]
+                        }
+                    ]
                 }
             ],
             "btrfs_options": {
