@@ -151,7 +151,7 @@ def create_config(user_data):
         "offline": False,
         "packages": ["base-devel", "git", "fzf", "snapper", "hyprland", "sddm", "pipewire", "pipewire-pulse", "wireplumber", "bluez", "bluez-utils"],
         "profile_config": {
-            "gfx_driver": "All open-source (default)",
+            "gfx_driver": "All open-source",
             "greeter": "sddm",
             "profile": {
                 "details": ["Hyprland"],
