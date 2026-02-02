@@ -51,9 +51,6 @@ def get_user_input():
     
     timezone = input("Timezone [UTC]: ").strip() or "UTC"
     
-    # Direct install option
-    direct_install = input("Start installation immediately? [y/N]: ").strip().lower() == 'y'
-    
     username = input("Username: ").strip()
     user_password = getpass.getpass(f"Password for {username}: ")
     user_confirm = getpass.getpass(f"Confirm password for {username}: ")
@@ -69,8 +66,7 @@ def get_user_input():
         'username': username,
         'user_password': user_password,
         'root_password': root_password,
-        'sudo_access': True,
-        'direct_install': direct_install
+        'sudo_access': True
     }
 
 def create_config(user_data):
@@ -287,6 +283,9 @@ echo "=== LishaLinux setup complete ==="
 '''
 
 def main():
+    # Backend configuration - set to True for direct install, False for TUI
+    DIRECT_INSTALL = True
+    
     if os.geteuid() != 0:
         print("Run as root")
         sys.exit(1)
@@ -328,8 +327,8 @@ def main():
             '--creds', str(creds_file)
         ]
         
-        # Add --silent flag for direct install
-        if user_data['direct_install']:
+        # Add --silent flag based on backend configuration
+        if DIRECT_INSTALL:
             cmd.append('--silent')
             
         subprocess.run(cmd, check=True)
