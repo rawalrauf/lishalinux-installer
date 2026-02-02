@@ -271,7 +271,7 @@ echo "LishaLinux setup handled by custom_commands"
 
 def main():
     # Backend configuration - set to True for direct install, False for TUI
-    DIRECT_INSTALL = False  # Changed to show final options
+    DIRECT_INSTALL = True  # Back to silent mode
     
     if os.geteuid() != 0:
         print("Run as root")
