@@ -10,6 +10,17 @@ import subprocess
 import getpass
 from pathlib import Path
 
+# Import archinstall modules for interactive selection
+try:
+    from archinstall.lib.interactions.system_conf import select_timezone
+    from archinstall.lib.interactions.network_menu import ask_to_configure_network
+    from archinstall.lib.models.mirror import MirrorConfiguration
+    from archinstall.lib.interactions.general_conf import select_mirror_regions
+except ImportError:
+    print("Warning: Could not import archinstall modules. Using fallback methods.")
+    select_timezone = None
+    select_mirror_regions = None
+
 def get_disk_size(disk_path):
     """Get disk size in bytes"""
     try:
@@ -49,7 +60,31 @@ def get_user_input():
         root_password = getpass.getpass("Root password: ")
         root_confirm = getpass.getpass("Confirm root password: ")
     
-    timezone = input("Timezone [UTC]: ").strip() or "UTC"
+    # Interactive timezone selection
+    if select_timezone:
+        print("\nSelect timezone:")
+        timezone = select_timezone()
+        if not timezone:
+            timezone = "UTC"
+    else:
+        timezone = input("Timezone [UTC]: ").strip() or "UTC"
+    
+    # Interactive mirror selection
+    if select_mirror_regions:
+        print("\nSelect mirror regions:")
+        mirror_config = select_mirror_regions()
+        if not mirror_config:
+            mirror_regions = {"Worldwide": [], "United States": []}
+        else:
+            mirror_regions = mirror_config.mirror_regions
+    else:
+        print("Available regions: Worldwide, United States, Germany, France, etc.")
+        regions_input = input("Mirror regions (comma-separated) [Worldwide,United States]: ").strip()
+        if regions_input:
+            regions = [r.strip() for r in regions_input.split(',')]
+            mirror_regions = {region: [] for region in regions}
+        else:
+            mirror_regions = {"Worldwide": [], "United States": []}
     
     username = input("Username: ").strip()
     user_password = getpass.getpass(f"Password for {username}: ")
@@ -63,6 +98,7 @@ def get_user_input():
         'disk': disk,
         'hostname': hostname,
         'timezone': timezone,
+        'mirror_regions': mirror_regions,
         'username': username,
         'user_password': user_password,
         'root_password': root_password,
@@ -207,15 +243,7 @@ def create_config(user_data):
         "mirror_config": {
             "custom_repositories": [],
             "custom_servers": [],
-            "mirror_regions": {
-                "Worldwide": [
-                    "http://mirror.rackspace.com/archlinux/$repo/os/$arch",
-                    "https://mirror.rackspace.com/archlinux/$repo/os/$arch",
-                    "https://ftpmirror.infania.net/mirror/archlinux/$repo/os/$arch",
-                    "https://geo.mirror.pkgbuild.com/$repo/os/$arch",
-                    "https://fastly.mirror.pkgbuild.com/$repo/os/$arch"
-                ]
-            },
+            "mirror_regions": user_data['mirror_regions'],
             "optional_repositories": []
         },
         "network_config": {
