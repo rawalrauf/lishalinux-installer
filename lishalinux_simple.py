@@ -150,6 +150,14 @@ def create_config(user_data):
                             ],
                             "mountpoint": None,
                             "obj_id": "root-partition-id",
+                            "size": {
+                                "sector_size": {
+                                    "unit": "B",
+                                    "value": 512
+                                },
+                                "unit": "B",
+                                "value": "100%"
+                            },
                             "start": {
                                 "sector_size": {
                                     "unit": "B",
