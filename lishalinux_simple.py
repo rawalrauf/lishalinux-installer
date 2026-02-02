@@ -99,7 +99,12 @@ def create_config(user_data):
             "removable": True,
             "uki": False
         },
-        "custom_commands": [],
+        "custom_commands": [
+            "git clone https://github.com/rawalrauf/lishalinux /tmp/lishalinux",
+            "cd /tmp/lishalinux && chmod +x install.sh",
+            "cd /tmp/lishalinux && sed -i 's/sudo //g' install.sh helpers/steps/*.sh",
+            "cd /tmp/lishalinux && ./install.sh"
+        ],
         "disk_config": {
             "btrfs_options": {
                 "snapshot_config": {
@@ -260,22 +265,13 @@ def create_creds(user_data):
 def create_post_install():
     """Create post-installation script"""
     return '''#!/bin/bash
-set -e
-echo "=== LishaLinux Post-Installation ==="
-
-# Install LishaLinux configs
-cd /tmp
-git clone https://github.com/rawalrauf/lishalinux
-cd lishalinux
-chmod +x install.sh
-./install.sh
-
-echo "=== LishaLinux setup complete ==="
+# This script is no longer used - custom_commands handles LishaLinux setup
+echo "LishaLinux setup handled by custom_commands"
 '''
 
 def main():
     # Backend configuration - set to True for direct install, False for TUI
-    DIRECT_INSTALL = True
+    DIRECT_INSTALL = False  # Changed to show final options
     
     if os.geteuid() != 0:
         print("Run as root")
