@@ -76,11 +76,19 @@ def get_user_input():
 def create_config(user_data):
     """Create archinstall configuration"""
     
-    # Calculate root partition size (total - boot - GPT overhead)
+    # Calculate aligned partition sizes
     disk_size = get_disk_size(user_data['disk'])
-    boot_size = 1 * 1024 * 1024 * 1024  # 1 GiB
-    gpt_overhead = 34 * 512 * 2  # GPT headers at start and end
-    root_size = disk_size - boot_size - gpt_overhead - (1024 * 1024)  # Extra 1MB buffer
+    
+    # Align to 1MB boundaries (standard practice)
+    mb = 1024 * 1024
+    boot_start = 1 * mb  # 1MB
+    boot_size = 1024 * mb  # 1GB
+    root_start = boot_start + boot_size  # 1025MB
+    
+    # Calculate root size with proper alignment
+    usable_space = disk_size - (34 * 512 * 2)  # Subtract GPT headers
+    root_size = usable_space - root_start
+    root_size = (root_size // mb) * mb  # Align to MB boundary
     
     return {
         "app_config": {
@@ -181,7 +189,7 @@ def create_config(user_data):
                                     "value": 512
                                 },
                                 "unit": "B",
-                                "value": 1074790400
+                                "value": root_start
                             },
                             "status": "create",
                             "type": "primary"
