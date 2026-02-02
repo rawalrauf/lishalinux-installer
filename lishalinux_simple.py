@@ -10,6 +10,16 @@ import subprocess
 import getpass
 from pathlib import Path
 
+def get_disk_size(disk_path):
+    """Get disk size in bytes"""
+    try:
+        result = subprocess.run(['lsblk', '-b', '-d', '-n', '-o', 'SIZE', disk_path], 
+                              capture_output=True, text=True)
+        return int(result.stdout.strip())
+    except:
+        # Fallback to 20GB if we can't detect
+        return 20 * 1024 * 1024 * 1024
+
 def get_user_input():
     """Get required user inputs"""
     print("=== LishaLinux Installer ===")
@@ -65,6 +75,13 @@ def get_user_input():
 
 def create_config(user_data):
     """Create archinstall configuration"""
+    
+    # Calculate root partition size (total - boot - GPT overhead)
+    disk_size = get_disk_size(user_data['disk'])
+    boot_size = 1 * 1024 * 1024 * 1024  # 1 GiB
+    gpt_overhead = 34 * 512 * 2  # GPT headers at start and end
+    root_size = disk_size - boot_size - gpt_overhead - (1024 * 1024)  # Extra 1MB buffer
+    
     return {
         "app_config": {
             "audio_config": {
@@ -155,8 +172,8 @@ def create_config(user_data):
                                     "unit": "B",
                                     "value": 512
                                 },
-                                "unit": "GiB",
-                                "value": 1000
+                                "unit": "B",
+                                "value": root_size
                             },
                             "start": {
                                 "sector_size": {
