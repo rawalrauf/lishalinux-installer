@@ -155,8 +155,8 @@ def create_config(user_data):
                                     "unit": "B",
                                     "value": 512
                                 },
-                                "unit": "B",
-                                "value": "100%"
+                                "unit": "GiB",
+                                "value": 1000
                             },
                             "start": {
                                 "sector_size": {
