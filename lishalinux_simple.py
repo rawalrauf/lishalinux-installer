@@ -100,7 +100,8 @@ def create_config(user_data):
             "uki": False
         },
         "custom_commands": [
-            USERNAME=$(ls /home | head -n1)
+            "
+USERNAME=$(ls /home | head -n1)
 HOME_DIR=/home/$USERNAME
 
 echo "=== LishaLinux chroot staging ==="
@@ -615,6 +616,7 @@ chown -R $USERNAME:$USERNAME "$HOME_DIR/.config"
 
 echo "=== chroot staging complete ==="
 echo "Exit chroot and reboot"
+    "
         ],
         "disk_config": {
             "btrfs_options": {
