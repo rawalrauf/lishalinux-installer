@@ -100,44 +100,33 @@ def create_config(user_data):
             "uki": False
         },
         "custom_commands": [
-            "
-USERNAME=$(ls /home | head -n1)
-HOME_DIR=/home/$USERNAME
 
-echo "=== LishaLinux chroot staging ==="
+"USERNAME=$(ls /home | head -n1)",
+"HOME_DIR=/home/$USERNAME",
 
-# -------------------------------------------------
-# 1. TEMP passwordless sudo (removed on first boot)
-# -------------------------------------------------
-echo "Setting temp passwordless sudo..."
-echo "$USERNAME ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/temp-lishalinux-setup
-chmod 440 /etc/sudoers.d/temp-lishalinux-setup
+"echo \"=== LishaLinux chroot staging ===\"",
 
-# -------------------------------------------------
-# 2. Autologin via getty (disable SDDM)
-# -------------------------------------------------
-echo "Configuring getty autologin..."
-systemctl disable sddm || true
+"echo \"Setting temp passwordless sudo...\"",
+"echo \"$USERNAME ALL=(ALL) NOPASSWD: ALL\" >/etc/sudoers.d/temp-lishalinux-setup",
+"chmod 440 /etc/sudoers.d/temp-lishalinux-setup",
 
-mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat >/etc/systemd/system/getty@tty1.service.d/autologin.conf <<EOF
+"echo \"Configuring getty autologin...\"",
+"systemctl disable sddm || true",
+
+"mkdir -p /etc/systemd/system/getty@tty1.service.d",
+"cat >/etc/systemd/system/getty@tty1.service.d/autologin.conf <<EOF
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty -a $USERNAME --noclear %I \$TERM
+ExecStart=-/sbin/agetty -a $USERNAME --noclear %I \\$TERM
 Environment=XDG_SESSION_TYPE=wayland
-EOF
+EOF",
 
-# -------------------------------------------------
-# 3. Staging directory (NOT ~/.config)
-# -------------------------------------------------
-echo "Creating staging directory..."
-mkdir -p "$HOME_DIR/lishalinux-setup"
-chown -R $USERNAME:$USERNAME "$HOME_DIR/lishalinux-setup"
+"echo \"Creating staging directory...\"",
+"mkdir -p \"$HOME_DIR/lishalinux-setup\"",
+"chown -R $USERNAME:$USERNAME \"$HOME_DIR/lishalinux-setup\"",
 
-# -------------------------------------------------
-# 4. DROP FIRST-BOOT SCRIPT (RUNS AFTER REAL BOOT)
-# -------------------------------------------------
-cat >"$HOME_DIR/lishalinux-setup/first-boot.sh" <<'EOF'
+"cat >\"$HOME_DIR/lishalinux-setup/first-boot.sh\" <<'EOF'
+
 #!/bin/bash
 # LishaLinux First Boot — Hyprland-based (NO systemd user services)
 
@@ -579,44 +568,30 @@ sudo rm -f /etc/sudoers.d/temp-lishalinux-setup
 
 sleep 3
 reboot
-EOF
+EOF",
 
-chmod +x "$HOME_DIR/lishalinux-setup/first-boot.sh"
-chown $USERNAME:$USERNAME "$HOME_DIR/lishalinux-setup/first-boot.sh"
+"chmod +x \"$HOME_DIR/lishalinux-setup/first-boot.sh\"",
+"chown $USERNAME:$USERNAME \"$HOME_DIR/lishalinux-setup/first-boot.sh\"",
 
-# -------------------------------------------------
-# 5. Hyprland autostart hook (TTY → Hyprland)
-# -------------------------------------------------
-cat >"$HOME_DIR/.lishalinux-autostart" <<'EOF'
-if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" -eq 1 ]; then
+"cat >\"$HOME_DIR/.lishalinux-autostart\" <<'EOF'
+if [ -z \"$WAYLAND_DISPLAY\" ] && [ \"$XDG_VTNR\" -eq 1 ]; then
     exec Hyprland
 fi
-EOF
+EOF",
 
-chown $USERNAME:$USERNAME "$HOME_DIR/.lishalinux-autostart"
+"chown $USERNAME:$USERNAME \"$HOME_DIR/.lishalinux-autostart\"",
 
-# -------------------------------------------------
-# 6. Ensure hook is sourced
-# -------------------------------------------------
-grep -q lishalinux-autostart "$HOME_DIR/.bash_profile" 2>/dev/null ||
-  echo '[ -f ~/.lishalinux-autostart ] && source ~/.lishalinux-autostart' \
-    >>"$HOME_DIR/.bash_profile"
+"grep -q lishalinux-autostart \"$HOME_DIR/.bash_profile\" 2>/dev/null || echo '[ -f ~/.lishalinux-autostart ] && source ~/.lishalinux-autostart' >>\"$HOME_DIR/.bash_profile\"",
 
-# -------------------------------------------------
-# 7. Hook first boot into Hyprland exec-once
-# -------------------------------------------------
-mkdir -p "$HOME_DIR/.config/hypr"
-touch "$HOME_DIR/.config/hypr/hyprland.conf"
+"mkdir -p \"$HOME_DIR/.config/hypr\"",
+"touch \"$HOME_DIR/.config/hypr/hyprland.conf\"",
 
-grep -q first-boot.sh "$HOME_DIR/.config/hypr/hyprland.conf" ||
-  echo "exec-once = $HOME_DIR/lishalinux-setup/first-boot.sh" \
-    >>"$HOME_DIR/.config/hypr/hyprland.conf"
+"grep -q first-boot.sh \"$HOME_DIR/.config/hypr/hyprland.conf\" || echo \"exec-once = $HOME_DIR/lishalinux-setup/first-boot.sh\" >>\"$HOME_DIR/.config/hypr/hyprland.conf\"",
 
-chown -R $USERNAME:$USERNAME "$HOME_DIR/.config"
+"chown -R $USERNAME:$USERNAME \"$HOME_DIR/.config\"",
 
-echo "=== chroot staging complete ==="
-echo "Exit chroot and reboot"
-    "
+"echo \"=== chroot staging complete ===\"",
+"echo \"Exit chroot and reboot\"",
         ],
         "disk_config": {
             "btrfs_options": {
