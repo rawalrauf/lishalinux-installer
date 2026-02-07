@@ -76,47 +76,40 @@ def create_config(user):
             "uki": False,
         },
         "custom_commands": [],
-        "disk_config": {
-            "config_type": "default_layout",
-            "btrfs_options": {
-                "snapshot_config": {"type": "Snapper"}
-            },
-            "device_modifications": [
+        
+"disk_config": {
+    "config_type": "default_layout",
+    "btrfs_options": {
+        "snapshot_config": {"type": "Snapper"}
+    },
+    "device_modifications": [
+        {
+            "device": user["disk"],
+            "wipe": True,
+            "partitions": [
                 {
-                    "device": user["disk"],
-                    "wipe": True,
-                    "partitions": [
-                        {
-                            "fs_type": "fat32",
-                            "mountpoint": "/boot",
-                            "flags": ["boot", "esp"],
-                            "size": {
-                                "unit": "GiB",
-                                "value": 1
-                            },
-                            "start": {
-                                "unit": "MiB",
-                                "value": 1
-                            },
-                            "status": "create",
-                            "type": "primary",
-                        },
-                        {
-                            "fs_type": "btrfs",
-                            "mount_options": ["compress=zstd"],
-                            "btrfs": [
-                                {"name": "@", "mountpoint": "/"},
-                                {"name": "@home", "mountpoint": "/home"},
-                                {"name": "@log", "mountpoint": "/var/log"},
-                                {"name": "@pkg", "mountpoint": "/var/cache/pacman/pkg"},
-                            ],
-                            "status": "create",
-                            "type": "primary",
-                        },
+                    "fs_type": "fat32",
+                    "mountpoint": "/boot",
+                    "flags": ["boot", "esp"],
+                    "status": "create",
+                    "type": "primary",
+                },
+                {
+                    "fs_type": "btrfs",
+                    "mount_options": ["compress=zstd"],
+                    "btrfs": [
+                        {"name": "@", "mountpoint": "/"},
+                        {"name": "@home", "mountpoint": "/home"},
+                        {"name": "@log", "mountpoint": "/var/log"},
+                        {"name": "@pkg", "mountpoint": "/var/cache/pacman/pkg"},
                     ],
-                }
+                    "status": "create",
+                    "type": "primary",
+                },
             ],
-        },
+        }
+    ],
+},
         "hostname": user["hostname"],
         "kernels": ["linux"],
         "locale_config": {
