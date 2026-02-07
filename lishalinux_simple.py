@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 LishaLinux Installer - Simple archinstall configuration generator
@@ -8,328 +9,263 @@ import sys
 import os
 import subprocess
 import getpass
+import shutil
 from pathlib import Path
+
+# -------------------------------------------------
+# Utilities
+# -------------------------------------------------
 
 def get_disk_size(disk_path):
     """Get disk size in bytes"""
     try:
-        result = subprocess.run(['lsblk', '-b', '-d', '-n', '-o', 'SIZE', disk_path], 
-                              capture_output=True, text=True)
+        result = subprocess.run(
+            ['lsblk', '-b', '-d', '-n', '-o', 'SIZE', disk_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
         return int(result.stdout.strip())
-    except:
+    except Exception:
         # Fallback to 20GB if we can't detect
         return 20 * 1024 * 1024 * 1024
+
+
+# -------------------------------------------------
+# User input
+# -------------------------------------------------
 
 def get_user_input():
     """Get required user inputs"""
     print("=== LishaLinux Installer ===")
     print("Arch-based distro with Hyprland and optimized defaults\n")
-    
+
     # Show available disks
     print("Available disks:")
     try:
-        result = subprocess.run(['lsblk', '-d', '-n', '-o', 'NAME,SIZE,TYPE'], 
-                              capture_output=True, text=True)
+        result = subprocess.run(
+            ['lsblk', '-d', '-n', '-o', 'NAME,SIZE,TYPE'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
         print(result.stdout)
-    except:
+    except Exception:
         print("Could not list disks")
-    
-    # Get user inputs
+
     disk = input("Target disk (e.g., sda): ").strip()
     if not disk.startswith('/dev/'):
         disk = f"/dev/{disk}"
-    
+
     hostname = input("Hostname [lishalinux]: ").strip() or "lishalinux"
-    
-    # Root password right after hostname
+
+    # Root password
     root_password = getpass.getpass("Root password: ")
     root_confirm = getpass.getpass("Confirm root password: ")
     while root_password != root_confirm:
         print("Passwords don't match!")
         root_password = getpass.getpass("Root password: ")
         root_confirm = getpass.getpass("Confirm root password: ")
-    
+
     username = input("Username: ").strip()
+
     user_password = getpass.getpass(f"Password for {username}: ")
     user_confirm = getpass.getpass(f"Confirm password for {username}: ")
     while user_password != user_confirm:
         print("Passwords don't match!")
         user_password = getpass.getpass(f"Password for {username}: ")
         user_confirm = getpass.getpass(f"Confirm password for {username}: ")
-    
+
     return {
-        'disk': disk,
-        'hostname': hostname,
-        'username': username,
-        'user_password': user_password,
-        'root_password': root_password,
-        'sudo_access': True
+        "disk": disk,
+        "hostname": hostname,
+        "username": username,
+        "user_password": user_password,
+        "root_password": root_password,
+        "sudo_access": True,
     }
+
+
+# -------------------------------------------------
+# Archinstall config
+# -------------------------------------------------
 
 def create_config(user_data):
     """Create archinstall configuration"""
-    
-    # Calculate aligned partition sizes
-    disk_size = get_disk_size(user_data['disk'])
-    
-    # Align to 1MB boundaries (standard practice)
+
+    disk_size = get_disk_size(user_data["disk"])
+
     mb = 1024 * 1024
-    boot_start = 1 * mb  # 1MB
-    boot_size = 1024 * mb  # 1GB
-    root_start = boot_start + boot_size  # 1025MB
-    
-    # Calculate root size with proper alignment
-    usable_space = disk_size - (34 * 512 * 2)  # Subtract GPT headers
+    boot_start = 1 * mb
+    boot_size = 1024 * mb
+    root_start = boot_start + boot_size
+
+    usable_space = disk_size - (34 * 512 * 2)
     root_size = usable_space - root_start
-    root_size = (root_size // mb) * mb  # Align to MB boundary
-    
+    root_size = (root_size // mb) * mb
+
     return {
         "app_config": {
-            "audio_config": {
-                "audio": "pipewire"
-            },
-            "bluetooth_config": {
-                "enabled": True
-            }
+            "audio_config": {"audio": "pipewire"},
+            "bluetooth_config": {"enabled": True},
         },
         "archinstall-language": "English",
         "auth_config": {},
         "bootloader_config": {
             "bootloader": "Limine",
             "removable": True,
-            "uki": False
+            "uki": False,
         },
+
+        # 🔑 IMPORTANT PART
         "custom_commands": [
-
-            "USERNAME=$(ls /home | head -n1)",
-            "HOME_DIR=/home/$USERNAME",
-            "echo 'Creating staging directory...'",
-            "mkdir -p '$HOME_DIR/lishalinux-setup'",
-            "chown -R $USERNAME:$USERNAME '$HOME_DIR/lishalinux-setup'",
-
+            "install -Dm755 /tmp/lishalinux-chroot-stage.sh "
+            "/usr/local/bin/lishalinux-chroot-stage",
+            f"/usr/local/bin/lishalinux-chroot-stage {user_data['username']}",
         ],
 
         "disk_config": {
             "btrfs_options": {
-                "snapshot_config": {
-                    "type": "Snapper"
-                }
+                "snapshot_config": {"type": "Snapper"}
             },
             "config_type": "default_layout",
             "device_modifications": [
                 {
-                    "device": user_data['disk'],
+                    "device": user_data["disk"],
+                    "wipe": True,
                     "partitions": [
                         {
-                            "btrfs": [],
-                            "dev_path": None,
-                            "flags": [
-                                "boot",
-                                "esp"
-                            ],
                             "fs_type": "fat32",
-                            "mount_options": [],
                             "mountpoint": "/boot",
-                            "obj_id": "boot-partition-id",
-                            "size": {
-                                "sector_size": {
-                                    "unit": "B",
-                                    "value": 512
-                                },
-                                "unit": "GiB",
-                                "value": 1
-                            },
-                            "start": {
-                                "sector_size": {
-                                    "unit": "B",
-                                    "value": 512
-                                },
-                                "unit": "MiB",
-                                "value": 1
-                            },
+                            "flags": ["boot", "esp"],
+                            "size": {"unit": "GiB", "value": 1},
+                            "start": {"unit": "MiB", "value": 1},
                             "status": "create",
-                            "type": "primary"
+                            "type": "primary",
                         },
                         {
-                            "btrfs": [
-                                {
-                                    "mountpoint": "/",
-                                    "name": "@"
-                                },
-                                {
-                                    "mountpoint": "/home",
-                                    "name": "@home"
-                                },
-                                {
-                                    "mountpoint": "/var/log",
-                                    "name": "@log"
-                                },
-                                {
-                                    "mountpoint": "/var/cache/pacman/pkg",
-                                    "name": "@pkg"
-                                }
-                            ],
-                            "dev_path": None,
-                            "flags": [],
                             "fs_type": "btrfs",
-                            "mount_options": [
-                                "compress=zstd"
+                            "mount_options": ["compress=zstd"],
+                            "btrfs": [
+                                {"name": "@", "mountpoint": "/"},
+                                {"name": "@home", "mountpoint": "/home"},
+                                {"name": "@log", "mountpoint": "/var/log"},
+                                {"name": "@pkg", "mountpoint": "/var/cache/pacman/pkg"},
                             ],
-                            "mountpoint": None,
-                            "obj_id": "root-partition-id",
-                            "size": {
-                                "sector_size": {
-                                    "unit": "B",
-                                    "value": 512
-                                },
-                                "unit": "B",
-                                "value": root_size
-                            },
-                            "start": {
-                                "sector_size": {
-                                    "unit": "B",
-                                    "value": 512
-                                },
-                                "unit": "B",
-                                "value": root_start
-                            },
+                            "size": {"unit": "B", "value": root_size},
+                            "start": {"unit": "B", "value": root_start},
                             "status": "create",
-                            "type": "primary"
-                        }
+                            "type": "primary",
+                        },
                     ],
-                    "wipe": True
                 }
-            ]
+            ],
         },
-        "hostname": user_data['hostname'],
-        "kernels": [
-            "linux"
-        ],
+        "hostname": user_data["hostname"],
+        "kernels": ["linux"],
         "locale_config": {
             "kb_layout": "us",
             "sys_enc": "UTF-8",
-            "sys_lang": "en_US.UTF-8"
+            "sys_lang": "en_US.UTF-8",
         },
         "mirror_config": {
-            "custom_repositories": [],
-            "custom_servers": [],
-            "mirror_regions": {
-                "Worldwide": []
-            },
-            "optional_repositories": []
+            "mirror_regions": {"Worldwide": []}
         },
-        "network_config": {
-            "type": "iso"
-        },
+        "network_config": {"type": "iso"},
         "ntp": True,
-        "packages": [
-            "git",
-            "kitty",
-            "gum"
-        ],
+        "packages": ["git", "kitty", "gum"],
         "parallel_downloads": 0,
         "profile_config": {
             "gfx_driver": "All open-source",
             "greeter": "sddm",
             "profile": {
+                "main": "Desktop",
+                "details": ["Hyprland"],
                 "custom_settings": {
-                    "Hyprland": {
-                        "seat_access": "polkit"
-                    }
+                    "Hyprland": {"seat_access": "polkit"}
                 },
-                "details": [
-                    "Hyprland"
-                ],
-                "main": "Desktop"
-            }
+            },
         },
-        "script": None,
         "services": [],
-        "swap": {
-            "algorithm": "zstd",
-            "enabled": True
-        },
+        "swap": {"enabled": True, "algorithm": "zstd"},
         "timezone": "UTC",
-        "version": "3.0.15"
+        "version": "3.0.15",
     }
+
 
 def create_creds(user_data):
     """Create credentials file"""
     return {
-        "!root-password": user_data['root_password'],
+        "!root-password": user_data["root_password"],
         "!users": [
             {
-                "username": user_data['username'],
-                "!password": user_data['user_password'],
-                "sudo": user_data['sudo_access']
+                "username": user_data["username"],
+                "!password": user_data["user_password"],
+                "sudo": user_data["sudo_access"],
             }
-        ]
+        ],
     }
 
-def create_post_install():
-    """Create post-installation script"""
-    return '''#!/bin/bash
-# This script is no longer used - custom_commands handles LishaLinux setup
-echo "LishaLinux setup handled by custom_commands"
-'''
+
+# -------------------------------------------------
+# Main
+# -------------------------------------------------
 
 def main():
-    # Backend configuration - set to True for direct install, False for TUI
-    DIRECT_INSTALL = True  # Back to silent mode
-    
+    DIRECT_INSTALL = True
+
     if os.geteuid() != 0:
         print("Run as root")
         sys.exit(1)
-    
-    # Get user input
+
+    # Validate chroot-stage script from installer wrapper
+    chroot_stage_src = os.environ.get("LISHALINUX_CHROOT_STAGE")
+    if not chroot_stage_src:
+        print("❌ LISHALINUX_CHROOT_STAGE not set")
+        sys.exit(1)
+
+    chroot_stage_src = Path(chroot_stage_src)
+    if not chroot_stage_src.exists():
+        print(f"❌ Chroot stage script not found: {chroot_stage_src}")
+        sys.exit(1)
+
+    # Copy into /tmp for archinstall
+    chroot_stage_dst = Path("/tmp/lishalinux-chroot-stage.sh")
+    shutil.copy(chroot_stage_src, chroot_stage_dst)
+    chroot_stage_dst.chmod(0o755)
+
+    # Collect user input
     user_data = get_user_input()
-    
-    # Create files
+
+    # Generate config + creds
     config = create_config(user_data)
     creds = create_creds(user_data)
-    post_install = create_post_install()
-    
-    # Write files
+
     config_file = Path("/tmp/lishalinux_config.json")
     creds_file = Path("/tmp/lishalinux_creds.json")
-    post_file = Path("/tmp/lishalinux_post.sh")
-    
-    with open(config_file, 'w') as f:
-        json.dump(config, f, indent=2)
-    
-    with open(creds_file, 'w') as f:
-        json.dump(creds, f, indent=2)
-    
-    with open(post_file, 'w') as f:
-        f.write(post_install)
-    post_file.chmod(0o755)
-    
-    print(f"\nFiles created:")
+
+    config_file.write_text(json.dumps(config, indent=2))
+    creds_file.write_text(json.dumps(creds, indent=2))
+
+    print("\nFiles created:")
     print(f"Config: {config_file}")
-    print(f"Creds: {creds_file}")
-    print(f"Post-install: {post_file}")
-    
-    # Run archinstall
+    print(f"Creds:  {creds_file}")
+
     print("\nStarting installation...")
+
+    cmd = ["archinstall", "--config", str(config_file), "--creds", str(creds_file)]
+    if DIRECT_INSTALL:
+        cmd.append("--silent")
+
     try:
-        cmd = [
-            'archinstall',
-            '--config', str(config_file),
-            '--creds', str(creds_file)
-        ]
-        
-        # Add --silent flag based on backend configuration
-        if DIRECT_INSTALL:
-            cmd.append('--silent')
-            
         subprocess.run(cmd, check=True)
-        
         print("\n=== Installation complete! ===")
         print("Reboot to start LishaLinux")
-        
     except subprocess.CalledProcessError as e:
         print(f"Installation failed: {e}")
         sys.exit(1)
 
+
 if __name__ == "__main__":
     main()
+
