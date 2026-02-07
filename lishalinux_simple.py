@@ -269,7 +269,7 @@ def create_creds(user_data):
 
 def main():
     # Backend configuration - set to True for direct install, False for TUI
-    DIRECT_INSTALL = False  # Back to silent mode
+    DIRECT_INSTALL = True  # Back to silent mode
     
     if os.geteuid() != 0:
         print("Run as root")
