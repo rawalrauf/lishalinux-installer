@@ -1,7 +1,8 @@
 
 #!/usr/bin/env python3
 """
-LishaLinux Installer - Simple archinstall configuration generator
+LishaLinux Installer
+Archinstall-based automatic installer with Hyprland defaults
 """
 
 import json
@@ -9,52 +10,28 @@ import sys
 import os
 import subprocess
 import getpass
-import shutil
 from pathlib import Path
 
-# -------------------------------------------------
-# Utilities
-# -------------------------------------------------
-
-def get_disk_size(disk_path):
-    """Get disk size in bytes"""
-    try:
-        result = subprocess.run(
-            ['lsblk', '-b', '-d', '-n', '-o', 'SIZE', disk_path],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return int(result.stdout.strip())
-    except Exception:
-        # Fallback to 20GB if we can't detect
-        return 20 * 1024 * 1024 * 1024
-
-
-# -------------------------------------------------
-# User input
-# -------------------------------------------------
 
 def get_user_input():
-    """Get required user inputs"""
     print("=== LishaLinux Installer ===")
     print("Arch-based distro with Hyprland and optimized defaults\n")
 
     # Show available disks
-    print("Available disks:")
+    print("Available disks:\n")
     try:
         result = subprocess.run(
-            ['lsblk', '-d', '-n', '-o', 'NAME,SIZE,TYPE'],
+            ["lsblk", "-d", "-n", "-o", "NAME,SIZE,TYPE"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         print(result.stdout)
     except Exception:
-        print("Could not list disks")
+        print("⚠️  Could not list disks\n")
 
     disk = input("Target disk (e.g., sda): ").strip()
-    if not disk.startswith('/dev/'):
+    if not disk.startswith("/dev/"):
         disk = f"/dev/{disk}"
 
     hostname = input("Hostname [lishalinux]: ").strip() or "lishalinux"
@@ -63,16 +40,15 @@ def get_user_input():
     root_password = getpass.getpass("Root password: ")
     root_confirm = getpass.getpass("Confirm root password: ")
     while root_password != root_confirm:
-        print("Passwords don't match!")
+        print("Passwords do not match!")
         root_password = getpass.getpass("Root password: ")
         root_confirm = getpass.getpass("Confirm root password: ")
 
     username = input("Username: ").strip()
-
     user_password = getpass.getpass(f"Password for {username}: ")
     user_confirm = getpass.getpass(f"Confirm password for {username}: ")
     while user_password != user_confirm:
-        print("Passwords don't match!")
+        print("Passwords do not match!")
         user_password = getpass.getpass(f"Password for {username}: ")
         user_confirm = getpass.getpass(f"Confirm password for {username}: ")
 
@@ -86,24 +62,7 @@ def get_user_input():
     }
 
 
-# -------------------------------------------------
-# Archinstall config
-# -------------------------------------------------
-
-def create_config(user_data):
-    """Create archinstall configuration"""
-
-    disk_size = get_disk_size(user_data["disk"])
-
-    mb = 1024 * 1024
-    boot_start = 1 * mb
-    boot_size = 1024 * mb
-    root_start = boot_start + boot_size
-
-    usable_space = disk_size - (34 * 512 * 2)
-    root_size = usable_space - root_start
-    root_size = (root_size // mb) * mb
-
+def create_config(user):
     return {
         "app_config": {
             "audio_config": {"audio": "pipewire"},
@@ -116,30 +75,29 @@ def create_config(user_data):
             "removable": True,
             "uki": False,
         },
-
-        # 🔑 IMPORTANT PART
-        "custom_commands": [
-            "install -Dm755 /tmp/lishalinux-chroot-stage.sh "
-            "/usr/local/bin/lishalinux-chroot-stage",
-            f"/usr/local/bin/lishalinux-chroot-stage {user_data['username']}",
-        ],
-
+        "custom_commands": [],
         "disk_config": {
+            "config_type": "default_layout",
             "btrfs_options": {
                 "snapshot_config": {"type": "Snapper"}
             },
-            "config_type": "default_layout",
             "device_modifications": [
                 {
-                    "device": user_data["disk"],
+                    "device": user["disk"],
                     "wipe": True,
                     "partitions": [
                         {
                             "fs_type": "fat32",
                             "mountpoint": "/boot",
                             "flags": ["boot", "esp"],
-                            "size": {"unit": "GiB", "value": 1},
-                            "start": {"unit": "MiB", "value": 1},
+                            "size": {
+                                "unit": "GiB",
+                                "value": 1
+                            },
+                            "start": {
+                                "unit": "MiB",
+                                "value": 1
+                            },
                             "status": "create",
                             "type": "primary",
                         },
@@ -152,8 +110,6 @@ def create_config(user_data):
                                 {"name": "@log", "mountpoint": "/var/log"},
                                 {"name": "@pkg", "mountpoint": "/var/cache/pacman/pkg"},
                             ],
-                            "size": {"unit": "B", "value": root_size},
-                            "start": {"unit": "B", "value": root_start},
                             "status": "create",
                             "type": "primary",
                         },
@@ -161,7 +117,7 @@ def create_config(user_data):
                 }
             ],
         },
-        "hostname": user_data["hostname"],
+        "hostname": user["hostname"],
         "kernels": ["linux"],
         "locale_config": {
             "kb_layout": "us",
@@ -169,11 +125,20 @@ def create_config(user_data):
             "sys_lang": "en_US.UTF-8",
         },
         "mirror_config": {
-            "mirror_regions": {"Worldwide": []}
+            "mirror_regions": {
+                "Worldwide": []
+            },
+            "custom_servers": [],
+            "custom_repositories": [],
+            "optional_repositories": [],
         },
         "network_config": {"type": "iso"},
         "ntp": True,
-        "packages": ["git", "kitty", "gum"],
+        "packages": [
+            "git",
+            "kitty",
+            "gum",
+        ],
         "parallel_downloads": 0,
         "profile_config": {
             "gfx_driver": "All open-source",
@@ -187,83 +152,60 @@ def create_config(user_data):
             },
         },
         "services": [],
-        "swap": {"enabled": True, "algorithm": "zstd"},
+        "swap": {
+            "enabled": True,
+            "algorithm": "zstd",
+        },
         "timezone": "UTC",
         "version": "3.0.15",
     }
 
 
-def create_creds(user_data):
-    """Create credentials file"""
+def create_creds(user):
     return {
-        "!root-password": user_data["root_password"],
+        "!root-password": user["root_password"],
         "!users": [
             {
-                "username": user_data["username"],
-                "!password": user_data["user_password"],
-                "sudo": user_data["sudo_access"],
+                "username": user["username"],
+                "!password": user["user_password"],
+                "sudo": user["sudo_access"],
             }
         ],
     }
 
 
-# -------------------------------------------------
-# Main
-# -------------------------------------------------
-
 def main():
-    DIRECT_INSTALL = True
-
     if os.geteuid() != 0:
-        print("Run as root")
+        print("Run this installer as root.")
         sys.exit(1)
 
-    # Validate chroot-stage script from installer wrapper
-    chroot_stage_src = os.environ.get("LISHALINUX_CHROOT_STAGE")
-    if not chroot_stage_src:
-        print("❌ LISHALINUX_CHROOT_STAGE not set")
-        sys.exit(1)
-
-    chroot_stage_src = Path(chroot_stage_src)
-    if not chroot_stage_src.exists():
-        print(f"❌ Chroot stage script not found: {chroot_stage_src}")
-        sys.exit(1)
-
-    # Copy into /tmp for archinstall
-    chroot_stage_dst = Path("/tmp/lishalinux-chroot-stage.sh")
-    shutil.copy(chroot_stage_src, chroot_stage_dst)
-    chroot_stage_dst.chmod(0o755)
-
-    # Collect user input
     user_data = get_user_input()
 
-    # Generate config + creds
     config = create_config(user_data)
     creds = create_creds(user_data)
 
-    config_file = Path("/tmp/lishalinux_config.json")
-    creds_file = Path("/tmp/lishalinux_creds.json")
+    config_path = Path("/tmp/lishalinux_config.json")
+    creds_path = Path("/tmp/lishalinux_creds.json")
 
-    config_file.write_text(json.dumps(config, indent=2))
-    creds_file.write_text(json.dumps(creds, indent=2))
+    config_path.write_text(json.dumps(config, indent=2))
+    creds_path.write_text(json.dumps(creds, indent=2))
 
-    print("\nFiles created:")
-    print(f"Config: {config_file}")
-    print(f"Creds:  {creds_file}")
+    print("\nStarting installation...\n")
 
-    print("\nStarting installation...")
-
-    cmd = ["archinstall", "--config", str(config_file), "--creds", str(creds_file)]
-    if DIRECT_INSTALL:
-        cmd.append("--silent")
+    cmd = [
+        "archinstall",
+        "--config", str(config_path),
+        "--creds", str(creds_path),
+        "--silent",
+    ]
 
     try:
         subprocess.run(cmd, check=True)
-        print("\n=== Installation complete! ===")
-        print("Reboot to start LishaLinux")
+        print("\n✅ Installation complete! Reboot to start LishaLinux.")
     except subprocess.CalledProcessError as e:
-        print(f"Installation failed: {e}")
-        sys.exit(1)
+        print("\n❌ Installation failed.")
+        print("Check /var/log/archinstall/install.log")
+        sys.exit(e.returncode)
 
 
 if __name__ == "__main__":
