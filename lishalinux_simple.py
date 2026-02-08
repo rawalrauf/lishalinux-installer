@@ -213,9 +213,7 @@ def create_config(user_data):
             "custom_repositories": [],
             "custom_servers": [],
             "mirror_regions": {
-                    "Germany": [],
-                    "Singapore": [],
-                    "United States": []
+                "India": []
             },
             "optional_repositories": []
         },
