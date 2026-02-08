@@ -2,9 +2,13 @@
 set -Eeuo pipefail
 trap 'echo "❌ Chroot stage failed at line $LINENO"' ERR
 
-USERNAME="${1:?username required}"
+USERNAME="$(ls -1 /home | head -n1)"
 HOME_DIR="/home/$USERNAME"
 
+if [[ -z "$USERNAME" ]] || ! id "$USERNAME" &>/dev/null; then
+  echo "❌ Could not determine valid user"
+  exit 1
+fi
 exec > >(tee -a /var/log/lishalinux-install.log) 2>&1
 
 echo "=== LishaLinux chroot staging ==="

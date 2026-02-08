@@ -127,9 +127,8 @@ def create_config(user_data):
         },
 
         "custom_commands": [
-            "USERNAME=$(ls /home | head -n1)",
             "install -Dm755 /var/tmp/lishalinux-chroot-stage.sh /usr/local/bin/lishalinux-chroot-stage",
-            "/usr/local/bin/lishalinux-chroot-stage {{USERNAME}}"
+            "/usr/local/bin/lishalinux-chroot-stage"
         ],
         "disk_config": {
             "btrfs_options": {
