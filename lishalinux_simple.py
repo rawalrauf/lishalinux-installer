@@ -248,6 +248,7 @@ def create_config(user_data):
             "git",
             "kitty",
             "gum"
+            "ttf-cascadia-mono-nerd"
         ],
         "parallel_downloads": 0,
         "profile_config": {
@@ -339,8 +340,7 @@ def main():
             
         subprocess.run(cmd, check=True)
         
-        print("\n=== Installation complete! ===")
-        print("Reboot to start LishaLinux")
+        print("You can Reboot Now")
         
     except subprocess.CalledProcessError as e:
         print(f"Installation failed: {e}")
