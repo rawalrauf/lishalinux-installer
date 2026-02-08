@@ -44,7 +44,7 @@ Arch-based distro installer using official Arch ISO + archinstall. Provides a fa
 2. Download and run installer:
 
 ```bash
-curl -L https://raw.githubusercontent.com/rawalrauf/lishalinux-installer/main/install.sh | bash
+bash <(curl -fsSL https://raw.githubusercontent.com/rawalrauf/lishalinux-installer/main/install.sh)
 ```
 
 ### Manual Installation

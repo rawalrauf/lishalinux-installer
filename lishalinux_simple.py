@@ -103,9 +103,7 @@ def create_config(user_data):
 
         "custom_commands": [
             "USERNAME=$(ls /home | head -n1)",
-            # Install your chroot script into the target system
-            "install -Dm755 /tmp/lishalinux-chroot-stage.sh /usr/local/bin/lishalinux-chroot-stage",
-            # Run it with the username
+            "install -Dm755 /var/tmp/lishalinux-chroot-stage.sh /usr/local/bin/lishalinux-chroot-stage",
             "/usr/local/bin/lishalinux-chroot-stage {{USERNAME}}"
         ],
         "disk_config": {
@@ -282,8 +280,9 @@ def main():
         print("❌ LISHALINUX_CHROOT_STAGE not found. Set environment variable pointing to your script.")
         sys.exit(1)
 
-    shutil.copy(chroot_stage, "/tmp/lishalinux-chroot-stage.sh")
-    os.chmod("/tmp/lishalinux-chroot-stage.sh", 0o755)
+    target = "/mnt/var/tmp/lishalinux-chroot-stage.sh"
+    shutil.copy(chroot_stage, target)
+    os.chmod(target, 0o755)
 
     # Create files
     config = create_config(user_data)
