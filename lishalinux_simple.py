@@ -12,24 +12,28 @@ from pathlib import Path
 import shutil
 import time
 
-def copy_chroot_script(script_src, mount_point="/mnt"):
+def copy_chroot_script_background(script_src, mount_point="/mnt"):
     """
-    Safely copy the chroot script after the target root filesystem is available.
-    Waits until /mnt is mounted.
+    Copy chroot script as soon as the target root filesystem is ready.
+    Runs in the background so installer can continue.
     """
-    target_dir = os.path.join(mount_point, "var", "tmp")
-    target_file = os.path.join(target_dir, os.path.basename(script_src))
+    def _copy_when_ready():
+        target_dir = os.path.join(mount_point, "var", "tmp")
+        target_file = os.path.join(target_dir, os.path.basename(script_src))
 
-    # Wait indefinitely until /mnt is mounted
-    while not os.path.ismount(mount_point):
-        print(f"⚠ Waiting for {mount_point} to be available...")
-        time.sleep(5)  # Check every 5 seconds
+        # Wait until /mnt is mounted
+        while not os.path.ismount(mount_point):
+            time.sleep(5)
 
-    # /mnt is now available, safe to create directory
-    os.makedirs(target_dir, exist_ok=True)
-    shutil.copy(script_src, target_file)
-    os.chmod(target_file, 0o755)
-    print(f"✅ Chroot script copied to {target_file}")
+        # /mnt is now available, safe to create directory and copy
+        os.makedirs(target_dir, exist_ok=True)
+        shutil.copy(script_src, target_file)
+        os.chmod(target_file, 0o755)
+        print(f"✅ Chroot script copied to {target_file}")
+
+    # Start the copying in a separate thread
+    thread = threading.Thread(target=_copy_when_ready, daemon=True)
+    thread.start()
 
 def get_disk_size(disk_path):
     """Get disk size in bytes"""
