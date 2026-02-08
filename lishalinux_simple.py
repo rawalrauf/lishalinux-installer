@@ -302,7 +302,7 @@ def main():
     if not chroot_stage or not Path(chroot_stage).exists():
         print("❌ LISHALINUX_CHROOT_STAGE not found. Set environment variable pointing to your script.")
         sys.exit(1)
-    copy_chroot_script(chroot_stage, mount_point="/mnt")
+    copy_chroot_script_background(chroot_stage, mount_point="/mnt")
 
     # Create files
     config = create_config(user_data)
