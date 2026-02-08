@@ -236,7 +236,8 @@ def create_config(user_data):
             "custom_repositories": [],
             "custom_servers": [],
             "mirror_regions": {
-                "India": []
+                "India": [],
+                    "Saudi Arabia": []
             },
             "optional_repositories": []
         },
