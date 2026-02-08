@@ -11,6 +11,7 @@ import getpass
 from pathlib import Path
 import shutil
 import time
+import threading
 
 def copy_chroot_script_background(script_src, mount_point="/mnt"):
     """
