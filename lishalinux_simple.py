@@ -10,6 +10,26 @@ import subprocess
 import getpass
 from pathlib import Path
 import shutil
+import time
+
+def copy_chroot_script(script_src, mount_point="/mnt"):
+    """
+    Safely copy the chroot script after the target root filesystem is available.
+    Waits until /mnt is mounted.
+    """
+    target_dir = os.path.join(mount_point, "var", "tmp")
+    target_file = os.path.join(target_dir, os.path.basename(script_src))
+
+    # Wait indefinitely until /mnt is mounted
+    while not os.path.ismount(mount_point):
+        print(f"⚠ Waiting for {mount_point} to be available...")
+        time.sleep(5)  # Check every 5 seconds
+
+    # /mnt is now available, safe to create directory
+    os.makedirs(target_dir, exist_ok=True)
+    shutil.copy(script_src, target_file)
+    os.chmod(target_file, 0o755)
+    print(f"✅ Chroot script copied to {target_file}")
 
 def get_disk_size(disk_path):
     """Get disk size in bytes"""
@@ -273,16 +293,12 @@ def main():
     
     # Get user input
     user_data = get_user_input()
-    
-    # Copy chroot stage script into /tmp
+   
     chroot_stage = os.environ.get("LISHALINUX_CHROOT_STAGE")
     if not chroot_stage or not Path(chroot_stage).exists():
         print("❌ LISHALINUX_CHROOT_STAGE not found. Set environment variable pointing to your script.")
         sys.exit(1)
-
-    target = "/mnt/var/tmp/lishalinux-chroot-stage.sh"
-    shutil.copy(chroot_stage, target)
-    os.chmod(target, 0o755)
+    copy_chroot_script(chroot_stage, mount_point="/mnt")
 
     # Create files
     config = create_config(user_data)
