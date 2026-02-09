@@ -30,7 +30,7 @@ def copy_chroot_script_background(script_src, mount_point="/mnt"):
         os.makedirs(target_dir, exist_ok=True)
         shutil.copy(script_src, target_file)
         os.chmod(target_file, 0o755)
-        print(f"✅ Chroot script copied to {target_file}")
+        print(f"Chroot script copied to {target_file}")
 
     # Start the copying in a separate thread
     thread = threading.Thread(target=_copy_when_ready, daemon=True)
@@ -105,10 +105,13 @@ def create_config(user_data):
     root_start = boot_start + boot_size  # 1025MB
     
     # Calculate root size with proper alignment
-    usable_space = disk_size - (34 * 512 * 2)  # Subtract GPT headers
-    root_size = usable_space - root_start
+    reserved = 2 * mb  # reserved for gpt headers
+    root_size = disk_size - root_start - reserved
     root_size = (root_size // mb) * mb  # Align to MB boundary
     
+    if root_size < 15 * 1024 * mb:
+        raise RuntimeError("Root partition smaller than 15GB, Use another disk")
+
     return {
         "app_config": {
             "audio_config": {
@@ -236,7 +239,9 @@ def create_config(user_data):
             "custom_servers": [],
             "mirror_regions": {
                 "India": [],
-                    "Saudi Arabia": []
+                    "Singapore": [],
+                    "Germany": [],
+                    "United States": [],
             },
             "optional_repositories": []
         },
@@ -302,7 +307,7 @@ def main():
    
     chroot_stage = os.environ.get("LISHALINUX_CHROOT_STAGE")
     if not chroot_stage or not Path(chroot_stage).exists():
-        print("❌ LISHALINUX_CHROOT_STAGE not found. Set environment variable pointing to your script.")
+        print("LISHALINUX_CHROOT_STAGE not found. Set environment variable pointing to your script.")
         sys.exit(1)
     copy_chroot_script_background(chroot_stage, mount_point="/mnt")
 
