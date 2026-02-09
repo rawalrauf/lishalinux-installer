@@ -136,7 +136,7 @@ def create_config(user_data):
                     "type": "Snapper"
                 }
             },
-            "config_type": "default_layout",
+            "config_type": "manual_partitioning",
             "device_modifications": [
                 {
                     "device": user_data['disk'],
@@ -247,7 +247,7 @@ def create_config(user_data):
         "packages": [
             "git",
             "kitty",
-            "gum"
+            "gum",
             "ttf-cascadia-mono-nerd"
         ],
         "parallel_downloads": 0,
