@@ -9,6 +9,32 @@ import os
 import subprocess
 import getpass
 from pathlib import Path
+import shutil
+import time
+import threading
+
+def copy_chroot_script_background(script_src, mount_point="/mnt"):
+    """
+    Copy chroot script as soon as the target root filesystem is ready.
+    Runs in the background so installer can continue.
+    """
+    def _copy_when_ready():
+        target_dir = os.path.join(mount_point, "var", "tmp")
+        target_file = os.path.join(target_dir, os.path.basename(script_src))
+
+        # Wait until /mnt is mounted
+        while not os.path.ismount(mount_point):
+            time.sleep(5)
+
+        # /mnt is now available, safe to create directory and copy
+        os.makedirs(target_dir, exist_ok=True)
+        shutil.copy(script_src, target_file)
+        os.chmod(target_file, 0o755)
+        print(f"Chroot script copied to {target_file}")
+
+    # Start the copying in a separate thread
+    thread = threading.Thread(target=_copy_when_ready, daemon=True)
+    thread.start()
 
 def get_disk_size(disk_path):
     """Get disk size in bytes"""
@@ -103,7 +129,10 @@ def create_config(user_data):
             "uki": False
         },
 
-        "custom_commands": [],
+        "custom_commands": [
+            "install -Dm755 /var/tmp/lishalinux-chroot-stage.sh /usr/local/bin/lishalinux-chroot-stage",
+            "/usr/local/bin/lishalinux-chroot-stage"
+        ],
         "disk_config": {
             "btrfs_options": {
                 "snapshot_config": {
@@ -267,7 +296,7 @@ def create_creds(user_data):
 
 def main():
     # Backend configuration - set to True for direct install, False for TUI
-    DIRECT_INSTALL = True
+    DIRECT_INSTALL = True  # Back to silent mode
     
     if os.geteuid() != 0:
         print("Run as root")
@@ -276,11 +305,11 @@ def main():
     # Get user input
     user_data = get_user_input()
    
-
-    chroot_stage = Path(__file__).with_name("lishalinux-chroot-stage.sh")
-    if not chroot_stage.exists():
-        print("chroot stage script not found")
+    chroot_stage = os.environ.get("LISHALINUX_CHROOT_STAGE")
+    if not chroot_stage or not Path(chroot_stage).exists():
+        print("LISHALINUX_CHROOT_STAGE not found. Set environment variable pointing to your script.")
         sys.exit(1)
+    copy_chroot_script_background(chroot_stage, mount_point="/mnt")
 
     # Create files
     config = create_config(user_data)
@@ -307,11 +336,10 @@ def main():
         cmd = [
             'archinstall',
             '--config', str(config_file),
-            '--creds', str(creds_file),
-            '--script', str(chroot_stage),
+            '--creds', str(creds_file)
         ]
         
-        # for archinstall tui checking
+        # Add --silent flag based on backend configuration
         if DIRECT_INSTALL:
             cmd.append('--silent')
             
