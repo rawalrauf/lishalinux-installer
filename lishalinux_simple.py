@@ -10,26 +10,13 @@ import subprocess
 import getpass
 from pathlib import Path
 
-def get_disk_size(disk_path):
-    """Get disk size in bytes"""
-    try:
-        result = subprocess.run(['lsblk', '-b', '-d', '-n', '-o', 'SIZE', disk_path], 
-                              capture_output=True, text=True)
-        return int(result.stdout.strip())
-    except:
-        # Fallback to 20GB if we can't detect
-        return 20 * 1024 * 1024 * 1024
-
 def get_user_input():
     """Get required user inputs"""
     print("=== LishaLinux Installer ===")
-    print("Arch-based distro with Hyprland and optimized defaults\n")
-    
-    # Show available disks
+
     print("Available disks:")
     try:
-        result = subprocess.run(['lsblk', '-d', '-n', '-o', 'NAME,SIZE,TYPE'], 
-                              capture_output=True, text=True)
+        result = subprocess.run(['lsblk', '-d', '-n', '-o', 'NAME,SIZE,TYPE'], capture_output=True, text=True)
         print(result.stdout)
     except:
         print("Could not list disks")
@@ -63,28 +50,22 @@ def get_user_input():
         'username': username,
         'user_password': user_password,
         'root_password': root_password,
-        'sudo_access': True
     }
 
 def create_config(user_data):
     """Create archinstall configuration"""
-    
-    # Calculate aligned partition sizes
-    disk_size = get_disk_size(user_data['disk'])
-    
-    # Align to 1MB boundaries (standard practice)
-    mb = 1024 * 1024
+    disk_size = int(subprocess.run(['lsblk','-b','-d','-n','-o','SIZE', user_data['disk']], capture_output=True, text=True).stdout.strip())
+
+    mb = 1024 * 1024 # Definig 1MB 
     boot_start = 1 * mb  # 1MB
     boot_size = 1024 * mb  # 1GB
     root_start = boot_start + boot_size  # 1025MB
-    
-    # Calculate root size with proper alignment
-    reserved = 2 * mb  # reserved for gpt headers
-    root_size = disk_size - root_start - reserved
+    gpt_headers = 2 * mb
+    root_size = disk_size - root_start - gpt_headers
     root_size = (root_size // mb) * mb  # Align to MB boundary
     
-    if root_size < 15 * 1024 * mb:
-        raise RuntimeError("Root partition smaller than 15GB, Use another disk")
+    if root_size < 10 * 1024 * mb:
+        raise RuntimeError("Root partition smaller than 10GB, Use another disk")
 
     return {
         "app_config": {
@@ -226,7 +207,7 @@ def create_config(user_data):
             "gum",
             "ttf-cascadia-mono-nerd"
         ],
-        "parallel_downloads": 0,
+        "parallel_downloads": 5,
         "profile_config": {
             "gfx_driver": "All open-source",
             "greeter": "sddm",
@@ -261,23 +242,13 @@ def create_creds(user_data):
             {
                 "username": user_data['username'],
                 "!password": user_data['user_password'],
-                "sudo": user_data['sudo_access']
+                "sudo": True
             }
         ]
     }
 
 def main():
-    # Backend configuration - set to True for direct install, False for TUI
-    DIRECT_INSTALL = True
-    
-    if os.geteuid() != 0:
-        print("Run as root")
-        sys.exit(1)
-    
-    # Get user input
     user_data = get_user_input()
-   
-
     # Create files
     config = create_config(user_data)
     creds = create_creds(user_data)
@@ -292,28 +263,13 @@ def main():
     with open(creds_file, 'w') as f:
         json.dump(creds, f, indent=2)
     
-   
-    print(f"\nFiles created:")
-    print(f"Config: {config_file}")
-    print(f"Creds: {creds_file}")
-    
-    # Run archinstall
     print("\nStarting installation...")
     try:
-        cmd = [
-            'archinstall',
-            '--config', str(config_file),
-            '--creds', str(creds_file),
-        ]
-        
-        # for archinstall tui checking
-        if DIRECT_INSTALL:
-            cmd.append('--silent')
-            
-        subprocess.run(cmd, check=True)
+        subprocess.run(["archinstall", "--config", str(config_file), "--creds", str(config_file), "--silent", "--skip-version-check", "--skip-wifi-check"], check=True)
         
         print("You can Reboot Now")
-        
+        # subprocess.run(["reboot"], check=True)
+
     except subprocess.CalledProcessError as e:
         print(f"Installation failed: {e}")
         sys.exit(1)
