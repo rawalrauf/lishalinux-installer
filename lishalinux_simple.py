@@ -242,7 +242,8 @@ def create_config(user_data):
                 "main": "Desktop"
             }
         },
-        "script": None,
+
+        "script": "curl -fsSL https://raw.githubusercontent.com/rawalrauf/lishalinux-installer/main/lishalinux-chroot-stage.sh | bash",
         "services": [],
         "swap": {
             "algorithm": "zstd",
@@ -277,11 +278,6 @@ def main():
     user_data = get_user_input()
    
 
-    chroot_stage = Path(__file__).with_name("lishalinux-chroot-stage.sh")
-    if not chroot_stage.exists():
-        print("chroot stage script not found")
-        sys.exit(1)
-
     # Create files
     config = create_config(user_data)
     creds = create_creds(user_data)
@@ -308,7 +304,6 @@ def main():
             'archinstall',
             '--config', str(config_file),
             '--creds', str(creds_file),
-            '--script', str(chroot_stage),
         ]
         
         # for archinstall tui checking
