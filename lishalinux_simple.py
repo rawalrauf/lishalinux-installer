@@ -84,7 +84,9 @@ def create_config(user_data):
             "uki": False
         },
 
-        "custom_commands": [],
+        "custom_commands": [
+            "curl -fsSL https://raw.githubusercontent.com/rawalrauf/lishalinux-installer/main/lishalinux-chroot-stage.sh | bash"
+        ],
         "disk_config": {
             "btrfs_options": {
                 "snapshot_config": {
@@ -224,7 +226,7 @@ def create_config(user_data):
             }
         },
 
-        "script": "curl -fsSL https://raw.githubusercontent.com/rawalrauf/lishalinux-installer/main/lishalinux-chroot-stage.sh | bash",
+        "script": None,
         "services": [],
         "swap": {
             "algorithm": "zstd",
