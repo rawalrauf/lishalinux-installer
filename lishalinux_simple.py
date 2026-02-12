@@ -267,7 +267,7 @@ def main():
     
     print("\nStarting installation...")
     try:
-        subprocess.run(["archinstall", "--config", str(config_file), "--creds", str(config_file), "--silent", "--skip-version-check", "--skip-wifi-check"], check=True)
+        subprocess.run(["archinstall", "--config", str(config_file), "--creds", str(creds_file), "--silent", "--skip-version-check", "--skip-wifi-check"], check=True)
         
         print("You can Reboot Now")
         # subprocess.run(["reboot"], check=True)
