@@ -1,12 +1,12 @@
 #!/bin/bash
 set -Eeuo pipefail
-trap 'echo "❌ Chroot stage failed at line $LINENO"' ERR
+trap 'echo "Chroot stage failed at line $LINENO"' ERR
 
 USERNAME="$(ls -1 /home | head -n1)"
 HOME_DIR="/home/$USERNAME"
 
 if [[ -z "$USERNAME" ]] || ! id "$USERNAME" &>/dev/null; then
-  echo "❌ Could not determine valid user"
+  echo "Could not determine valid user"
   exit 1
 fi
 exec > >(tee -a /var/log/lishalinux-install.log) 2>&1
@@ -38,7 +38,6 @@ chown -R $USERNAME:$USERNAME "$HOME_DIR/lishalinux-setup"
 # 4. DROP FIRST-BOOT SCRIPT (RUNS AFTER REAL BOOT)
 cat >"$HOME_DIR/lishalinux-setup/first-boot.sh" <<'EOF'
 #!/bin/bash
-# LishaLinux First Boot — Hyprland-based (NO systemd user services)
 
 set -e
 
@@ -50,7 +49,7 @@ while [ -z "$WAYLAND_DISPLAY" ]; do
     sleep 1
 done
 
-# Hyprland config edits (clean screen FIRST)
+# Hyprland config edits 
 mkdir -p "$HOME/.config/hypr"
 
 cat >>"$HOME/.config/hypr/hyprland.conf" <<'HYPR'
@@ -82,10 +81,9 @@ decoration {
     rounding = 10
     rounding_power = 2
 
-    # Change transparency of focused and unfocused windows
     active_opacity = 1.0
     inactive_opacity = 1.0
-
+}
 input {
     kb_layout = us
     kb_variant =
@@ -95,7 +93,7 @@ input {
 
     follow_mouse = 1
 
-    sensitivity = 0 # -1.0 - 1.0, 0 means no modification.
+    sensitivity = 0
 
     touchpad {
         natural_scroll = false
@@ -109,7 +107,7 @@ device {
     sensitivity = -0.5
 }
 
-$mainMod = SUPER # Sets "Windows" key as main modifier
+$mainMod = SUPER
 
 bind = $mainMod, T, exec, $terminal
 bind = $mainMod, Q, killactive,
@@ -153,7 +151,6 @@ bindm = $mainMod, mouse:272, movewindow
 bindm = $mainMod, mouse:273, resizewindow
 
 # Example windowrules that are useful
-
 windowrule {
     # Ignore maximize requests from all apps. You'll probably like this.
     name = suppress-maximize-events
@@ -196,14 +193,12 @@ kitty \
 clear
 
 printf "\033[32m%s\033[0m\n\n" "
- ▄█             ▄█          ▄████████         ▄█    █▄            ▄████████ 
-███            ███         ███    ███        ███    ███          ███    ███ 
-███            ███▌        ███    █▀         ███    ███          ███    ███ 
-███            ███▌        ███              ▄███▄▄▄▄███▄▄        ███    ███ 
-███            ███▌      ▀███████████      ▀▀███▀▀▀▀███▀       ▀███████████ 
-███            ███                ███        ███    ███          ███    ███ 
-███▌    ▄      ███          ▄█    ███        ███    ███          ███    ███ 
-█████▄▄██      █▀         ▄████████▀         ███    █▀           ███    █▀  
+██╗     ██╗███████╗██╗  ██╗ █████╗         ██╗     ██╗███╗   ██╗██╗   ██╗██╗  ██╗
+██║     ██║██╔════╝██║  ██║██╔══██╗        ██║     ██║████╗  ██║██║   ██║╚██╗██╔╝
+██║     ██║███████╗███████║███████║        ██║     ██║██╔██╗ ██║██║   ██║ ╚███╔╝ 
+██║     ██║╚════██║██╔══██║██╔══██║        ██║     ██║██║╚██╗██║██║   ██║ ██╔██╗ 
+███████╗██║███████║██║  ██║██║  ██║        ███████╗██║██║ ╚████║╚██████╔╝██╔╝ ██╗
+╚══════╝╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝        ╚══════╝╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═╝
 "
 
 rows=$(tput lines)
